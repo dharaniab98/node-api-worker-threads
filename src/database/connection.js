@@ -10,7 +10,6 @@ const dbName = 'insuredMe';
 module.exports.dbConnection = async () => {
   try{
     await client.connect();
-    console.log('Connected successfully to server');
     const db = client.db(dbName);
     return db;
   }catch(err){
