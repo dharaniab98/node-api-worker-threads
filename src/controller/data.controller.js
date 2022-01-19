@@ -1,4 +1,4 @@
-const {Worker, isMainThread, parentPort, workerData } = require("worker_threads");
+const {Worker } = require("worker_threads");
 const path = require("path");
 const {dbConnection} = require("./../database/connection");
 
@@ -21,10 +21,9 @@ module.exports.upload = (req, res) => {
                     console.log(`Worker stopped with exit code ${code}`);
         });
 
-        res.send("done");
+        res.send({message:"success"});
    }catch(err){
-        console.log("err in upload");
-        res.send(err);
+        res.send({message:"Failed to upload data"});
    }  
 }
 
@@ -39,19 +38,11 @@ module.exports.policyInfo =async (req, res) => {
         let ids = []
         for(let i=0; i< result.length; i++){
            ids.push(result[i]._id)
-           console.log(result[i]._id);
         }
         let policies = await policy_info.find({user_id :{"$in":[...ids] }}).toArray();
-         console.log(policies)
-        // if(!result){
-        //     console.log("element found");
-        // }else{
-        //     console.log("ele not found");
-        // }
-        //.log(result);
-        res.send(policies)
+        res.send({status:"success", data:policies})
     }catch(err){
-        console.log(err);
+        res.send({message:"fail to get data"})
     }
 }
 
@@ -59,18 +50,14 @@ module.exports.policyInfo =async (req, res) => {
 module.exports.agregatedPolicyUser =async  (req, res) => {
     try{
         const db = await dbConnection();
-        console.log("results")
         const users = await db.collection('users');
         const policy_info = await db.collection("policy_info");
-        // let aggregaredResults =await users.find({}).toArray()
         let aggregaredResults = await users.aggregate([
             {$group : {_id:{_id:"$_id",first_name:"$first_name"}}},
             {$lookup: {from: "policy_info", localField: "_id._id", foreignField: "user_id", as: "policies"}},
         ]).toArray()
-        console.log("results")
-        console.log(aggregaredResults);
-        res.send(aggregaredResults);
+        res.send({status:"success", data:aggregaredResults});
     }catch(err){
-        console.log(err)
+        res.send({message:"fail to get data"})
     } 
 }
